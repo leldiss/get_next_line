@@ -22,6 +22,6 @@ char	*ft_strjoin(char *s1, char *s2);
 size_t	ft_strlen(const char *s);
 char	*ft_substr(char *s, unsigned int start, size_t len);
 char	*get_next_line(int fd);
-size_t	ft_get_line(char **rem, char **line, char **buff, int fd);
-char	*ft_subline(char **rem, char **line);
+char	*get_line(int fd, char *buff, char *remainder);
+char	*subline(char *line);
 #endif

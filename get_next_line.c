@@ -12,69 +12,67 @@
 
 #include "get_next_line.h"
 
-char	*subline(char **remainder, char **line)
+char	*get_line(int fd, char *buff, char *remainder)
 {
-	size_t	len;
+	long	count;
+	char	*tmp;
+
+	count = 1;
+	while (count)
+	{
+		count = read(fd, buff, BUFFER_SIZE);
+		if (count == -1)
+			return (0);
+		else if (count == 0)
+			break ;
+		buff[count] = '\0';
+		if (!remainder)
+			remainder = ft_strdup("");
+		tmp = remainder;
+		remainder = ft_strjoin(tmp, buff);
+		tmp = NULL;
+		if (ft_strchr(buff, '\n'))
+			break ;
+	}
+	return (remainder);
+}
+
+char	*subline(char *line)
+{
+	long	len;
 	char	*new_remainder;
 
 	len = 0;
-	new_remainder = NULL;
-	while ((*remainder)[len] != '\n' && (*remainder)[len])
-		++len;
-	if ((*remainder)[len] == '\n')
+	while (line[len] != '\n' && line[len] != '\0')
+		len++;
+	if (line[len] == '\0')
+		return (NULL);
+	new_remainder = ft_substr(line, len + 1, ft_strlen(line) - len);
+	if (*new_remainder == '\0')
 	{
-		++len;
-		*line = ft_substr(*remainder, 0, len);
-		new_remainder = ft_strdup(*remainder + len);
+		free(new_remainder);
+		new_remainder = NULL;
 	}
-	else
-		*line = ft_strdup(*remainder);
-	free(*remainder);
+	line[len + 1] = '\0';
 	return (new_remainder);
-}
-
-size_t	get_line(char **remainder, char **line, char **buff, int fd)
-{
-	size_t	rb;
-
-	rb = 1;
-	while (rb && !ft_strchr(*remainder, '\n'))
-	{
-		rb = read(fd, *buff, BUFFER_SIZE);
-		(*buff)[rb] = 0;
-		*remainder = ft_strjoin(*remainder, *buff);
-	}
-	free(*buff);
-	*remainder = subline(remainder, line);
-	if (!**line)
-	{
-		free(*line);
-		*line = NULL;
-	}
-	return (rb);
 }
 
 char	*get_next_line(int fd)
 {
 	char		*buff;
 	char		*line;
-	static char	*remainder = NULL;
-	size_t		rb;
+	static char	*remainder;
 
-	if (fd < 0 || BUFFER_SIZE < 0)
+	if (fd < 0 || BUFFER_SIZE < 0 || read(fd, NULL, 0) < 0)
 		return (NULL);
 	buff = (char *)malloc(BUFFER_SIZE + 1);
 	if (!buff)
 		return (NULL);
-	if (read(fd, buff, 0) < 0)
-	{
-		free(buff);
+	line = get_line(fd, buff, remainder);
+	free(buff);
+	buff = NULL;
+	if (!line)
 		return (NULL);
-	}
-	if (!remainder)
-		remainder = ft_strdup("");
-	rb = get_line(&remainder, &line, &buff, fd);
-	if (!rb && !line)
-		return (NULL);
+	remainder = subline(line);
 	return (line);
 }
